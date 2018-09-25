@@ -6,7 +6,7 @@ email: huxpro@gmail.com
 description: ""
 keyword: ""
 url: "http://huangxuan.me"              # your host, for absolute URL
-baseurl: "/huxblog-boilerplate"         # for example, '/blog' if your blog hosted on 'host/blog'
+baseurl: "/blog"         # for example, '/blog' if your blog hosted on 'host/blog'
 
 
 
@@ -32,7 +32,7 @@ anchorjs: true                          # if you want to customize anchor. check
 
 # Gems
 # from PR#40, to support local preview for Jekyll 3.0
-gems: [jekyll-paginate]
+plugins: [jekyll-paginate]
 
 
 
