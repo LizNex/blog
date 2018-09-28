@@ -719,7 +719,7 @@ body {
 }
 /* Hux add tags support */
 .tags {
-  margin-bottom: -5px;
+  margin-bottom: 5px;
 }
 .tags a,
 .tags .tag {
