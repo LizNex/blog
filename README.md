@@ -1,9 +1,10 @@
-# HuxBlog Boilerplate
+# 左手喝水的博客
 
-##### This is the boilerplate of [Hux Blog](https://github.com/Huxpro/huxpro.github.io), all documents is over there!
+## 浏览地址
 
-#### [View Boilerplate &rarr;](http://huangxuan.me/huxblog-boilerplate/)
+https://liznex.github.io/blog/
 
-#### [View Live Hux Blog &rarr;](http://huangxuan.me)
+## 环境配置
 
-## If you like Hux Blog, Please star [huxpro.github.io repo](https://github.com/Huxpro/huxpro.github.io) instead of this! Thank you!
+- ruby
+- jeklly

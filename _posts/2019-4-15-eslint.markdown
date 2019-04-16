@@ -1,0 +1,49 @@
+---
+layout: post
+title: "eslint"
+subtitle: ""
+date: 2019-04-15 12:00:00
+author: "左手喝水"
+header-img: "img/post-bg-2015.jpg"
+tags:
+  - 环境搭建
+---
+
+> “代码不规范，同事两行泪”
+
+## 官网
+
+https://cn.eslint.org/docs/user-guide/getting-started
+
+## 使用
+
+- 全局安装：npm install -g eslint
+- eslint 初始化：eslint --init 生成.eslintrc 文件，.eslintrc 中可以配置验证规则，具体参考官网配置
+- 在 extends 中可以配置其他预设的 eslintCofnig，在 npm 中搜索 eslint config 可以搜到很多
+- 运行 `eslint xxx.js` 就可以检查文件规范了
+
+## vscode 中使用：
+
+- 安装 vscode中的eslint 插件
+- 在vscode设置中打开`Eslint:Always Show Status` 就可以看到有问题的语法被标记了
+- prettier插件配和eslint格式化代码，安装prettier插件，完成后在vscode设置中打开 `Prettier: Eslint Integration`，现在prettier格式化代码的时候就采用eslint的规则了
+
+## 配合 git 做提交检查
+  -  安装 husky   
+`npm i husky -D`
+  - packjson 中在 script 中添加 lint 命令
+    ```
+    "scripts": {
+        "lint": "npx eslint --ext .js ./"
+    }
+    ```
+  - packjson 中添加 husky 配置,实际上就是husky的钩子完成eslint检查
+
+    ```
+    "husky": {
+        "hooks": {
+            pre-commit": "echo 'husky' && npm run lint"
+        }
+    }
+    ```
+    检查失败的话本次提交将不会被提交
