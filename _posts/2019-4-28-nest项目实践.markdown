@@ -1,0 +1,77 @@
+---
+layout: post
+title: "nest 项目实践"
+subtitle: ""
+date: 2019-04-15 12:00:00
+author: "左手喝水"
+header-img: "img/post-bg-2015.jpg"
+tags:
+  - node
+---
+
+> java 如日中天，node 穷追猛赶
+
+## 简介
+
+[nestjs6.x 中文文档](https://docs.nestjs.cn/6/introduction)  
+[nestjs6.x 英文文档](https://docs.nestjs.com)(建议看英文文档，中文文档有些还没翻译完 2019-4-15)
+
+nestjs 是一款基于 node 的服务端框架，基于 Express 之上开发，所以 Express 可以使用的中间件组件 nestjs 都可以使用；
+
+写法类似 java spring boot，所以写 java 的后端同学上手也难易度也不是很高。
+
+nestjs 的依赖注入借鉴 angular 的思想，写法也十分相似前端写 angular 的同学也很容易上手。（学一个会两个 XD）
+
+使用 nestjs 除了熟悉框架提供的一些规则还要熟悉一下技能：node、数据库、服务端开发；对前端同学来说是一个好机会来了解后端开发吧。
+
+由于 nest 在中国普及率不是很高可以参考的资料有限，开发的过程中刚好遇到了 6.x 版本发布，写个文记录一下踩坑日志吧
+
+## nest 基础
+
+### 模块
+
+模块基础使用部分参考：[nestjs6.x 文档-模块](https://docs.nestjs.cn/6/modules)
+
+nest 采用依赖注入的思想来完成模块之间的引用，只有在模块中引用或者全局的模块才可以在其他模块中使用
+
+需要注意的是
+
+1. 模块循环引用
+2. 全局模块使用导出  
+   在需要全局使用的模块上加上 `@Gobal` 修饰符，注意全局模块和普通模块一样要导出使用的 `Service` 也就是 `exprots` 中填写导出的`Service`
+
+### error filter
+
+### 拦截器
+
+## 功能
+
+### 入参校验
+
+### 日志
+
+### typeorm
+
+### api 文档
+
+### 统一返回
+
+### 定时任务
+
+### 报错处理
+
+### cors 跨域
+
+### 数据库
+
+### 请求
+
+### 配置文件
+
+### 环境判断
+
+## 提炼
+
+### 模型转换
+
+### 功能解耦
