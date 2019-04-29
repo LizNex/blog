@@ -53,7 +53,7 @@ nest g service service-name
 ### 提供者
 
 provider 在 nest 中是比较重要的角色，nest 中经常会说到的依赖注入很大部分就是在说这个 provider；  
-provider 就要从 service 说起，service 是承担业务逻辑的部分，比如用户、商品的处理就可以写在不同 service 中处理；而用户购买商品的时候用户 service 就要引用商品 service 了，就是这样用的
+provider 就要从 service 说起，service 是承担业务逻辑的部分，比如用户、商品的处理就可以写在不同 service 中处理；而用户购买商品的时候用户 service 就要引用商品 service ，例如
 
 ```ts
 @Injectable()
@@ -63,6 +63,8 @@ export class UserService {
 ```
 
 在构造函数中直接注入 GoodsService 不用再去实例化 nest 会帮你把实例化的对象引入进来；
+nest会把每个service都生一个单例，不同模块注入的时候都是同一个实例对象，这是为了不生成多余的service浪费内存或导致实例之间的混乱。
+注意要注入其他模块的service需要先在模块中注册包含引入service的模块；
 
 ### 模块
 
@@ -78,9 +80,19 @@ nest 采用依赖注入的思想来完成模块之间的引用，只有在模块
 2. 全局模块使用导出  
    在需要全局使用的模块上加上 `@Gobal` 修饰符，注意全局模块和普通模块一样要导出使用的 `Service` 也就是 `exprots` 中填写导出的`Service`
 
-### error filter
+### [error filter](https://docs.nestjs.cn/6/exceptionfilters)
 
 error filter 可以捕捉所有抛出的异常；根据这个特性可以做通用的异常处理；
+
+```ts
+export class ErrorFilter<T> implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+
+}
+```
+第一个参数 exception是捕捉到的异常实例，底层都是继承node的error类；一般包含报错信息、错误代码堆栈等等
+
+
 
 ## 功能
 
