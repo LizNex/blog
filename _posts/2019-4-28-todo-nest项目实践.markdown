@@ -81,6 +81,8 @@ nest 采用依赖注入的思想来完成模块之间的引用，只有在模块
    需要在 model 和 service 中都加上`forwardRef`标记
 2. 全局模块使用导出  
    在需要全局使用的模块上加上 `@Gobal` 修饰符，注意全局模块和普通模块一样要导出使用的 `Service` 也就是 `exprots` 中填写导出的`Service`
+3.动态模块
+// TODO: 动态模块
 
 ### [error filter](https://docs.nestjs.cn/6/exceptionfilters)
 
@@ -166,17 +168,201 @@ export class CreateUserDto {
 
 ### [日志](https://docs.nestjs.cn/6/techniques?id=%E6%97%A5%E5%BF%97)
 
-nest 自带的日志很弱。。控制台输出一下的那种。。虽然也可以自定义日志类接入，但是报错抛出异常的时候并不能正常输出 error 信息（也可能是我操作的姿势不对 orz。。。）所以我就改
+nest 有2种方法实现日志（具体请参考日志文档）：
+1. 实现loggerService接口，实现日志功能
+2. 继承logger，扩展日志功能。
 
-### typeorm
+两种方法都可以完成日志功能的记录，搭配第三方工具可以有更好的效果，我搭配了winston，选择winston主要考虑到想要把日志记录的文件中、每天都要新建一个文件来记录日志、日记需要区分等级、定期清理过期日志等等。另外winston上github start数也比较高群众基础好。
 
-### api 文档
+// TODO:winston 可读性
+
+### [typeorm](https://docs.nestjs.cn/6/techniques?id=%E6%95%B0%E6%8D%AE%E5%BA%93%EF%BC%88typeorm%EF%BC%89)
+
+使用typeorm
+1. 在根目录导入`TypeOrmModule`，设置连接数据库属性。
+2. 建立实体类，加上对应的`Typeorm`装饰器。
+3. 在需要的模块中引入注册实体类
+    ```ts
+    import { TypeOrmModule } from '@nestjs/typeorm';
+
+    @Module({
+      imports: [TypeOrmModule.forFeature([Photo])]
+    })
+    ```
+4. 在service中引入对应仓库使用
+
+    ```ts
+    import { Injectable } from '@nestjs/common';
+    import { InjectRepository } from '@nestjs/typeorm';
+    import { Repository } from 'typeorm';
+    import { Photo } from './photo.entity';
+
+    @Injectable()
+    export class PhotoService {
+      constructor(
+        @InjectRepository(Photo)
+        private readonly photoRepository: Repository<Photo>,
+      ) {}
+
+      async findAll(): Promise<Photo[]> {
+        return await this.photoRepository.find();
+      }
+    }
+
+    ```
+注意：
+  1. 一对多/多对多关系
+  2. 重命名数据库字段
+  3. 更多方法参考typeorm文档
+
+// TODO: forRoot的写法  
+// TODO: factory的写法
+
+
+### [api 文档 (swagger)](https://docs.nestjs.cn/6/recipes?id=openapi-swagger)
+
+文档相关装饰器都从`@nestjs/swagger`中引入
+
+控制器
+```ts
+import { ApiResponse, ApiImplicitParam, ApiOperation } from '@nestjs/swagger';
+
+@Controller('dashboard')
+export class DashboardController {
+  @Get(':id')
+  @ApiOperation({ title: '详情页接口' }) // 接口名
+  @ApiResponse({
+    status: 200,            // 接口状态
+    type: ProjectDetailVo,  // 返回格式
+    description: '',        // 描述
+  })
+  @ApiImplicitParam({
+    name: '项目ID',          // 请求参数说明,这里就是传入id的说明
+  })
+  async projectDetail(@Param('id') id): Promise<IResponse> {
+   // anything ... 
+  }
+}
+```
+类
+
+```ts
+import { ApiModelProperty } from '@nestjs/swagger';
+
+export class BugDto {
+  @ApiModelProperty({
+    description: '总数',
+  })
+  total: number;
+  @ApiModelProperty({
+    description: 'bug解决率',
+  })
+  percentage: number;
+  @ApiModelProperty({
+    description: 'bug解决个数',
+  })
+}
+```
+
+nest的swagger界面有些落后，看起来还是有些吃力。  
+我们为了多人协作也为了容易理解用了可以导入swagger生成json文件的[yapi](http://yapi.demo.qunar.com/)，配置yapi的更新接口每次启动项目都会更新yapi平台内的文档。
 
 ### 统一返回
 
+为了能让输出的内容对前端比较友好，统一了返回格式，包括业务报错、内部程序报错、正常返回都用了统一格式进行返回。
+
+统一返回格式
+```ts
+export interface IResponse {
+  data?: any;           // 返回的内容信息
+  message: string;      // 返回的提示message
+  timestamp: number;    // 时间戳
+  code: string;         // 返回code 判断返回类型
+}
+```
+
+
+返回的message和code做了枚举对应
+
+```ts
+// 规定了枚举的格式的接口
+import { ResultEnum } from '../../common/interface/result.enum.interface'; 
+
+// 默认返回成功消息
+export const SUCCESS: ResultEnum = {
+  code: '10000',
+  message: 'success',
+};
+
+// 默认返回失败消息
+export const FAIL: ResultEnum = {
+  code: '10001',
+  message: 'fail',
+};
+```
+
+统一的返回格式和对应的message code都有了现在就缺统一的方法把这些信息整合到一起了
+
+```ts
+import { IResponse } from '../common/interface/response.interface';
+import { SUCCESS } from './constants/result.enum';
+import { ResultEnum } from '../common/interface/result.enum.interface';
+
+export class Result {
+  // 静态方法任何地方都可以使用
+  // 需要传递两个值 
+  // data：返回给前端的信息
+  // resultEnum：选填，事先规定的返回枚举，默认是返回成功的枚举
+  public static create(
+    data: any = null,
+    resultEnum: ResultEnum = SUCCESS,  
+  ): IResponse { // 规定返回格式是之前设定的格式
+    const { code, message } = resultEnum;
+    return {
+      data,
+      message,
+      code,
+      timestamp: new Date().getTime(),
+    };
+  }
+}
+
+```
+
+好啦，现在只要在返回的时候调用这个方法，返回的数据格式和枚举信息都是我们规定的信息了。  
+这样做的好处在于前端能够得到固定的格式信息、错误码的制定可以统一管理、返回格式时候不用每次关注格式是怎么样的，只要把返回值往返回的方法里传就可以了。
+
+
 ### 定时任务
 
+定时任务使用的第三方插件[node-schedule](https://github.com/node-schedule/node-schedule#readme) 使用方法比较简单看文档就好。
+
 ### 报错处理
+
+所有报错的处理集中在error filter中。  
+这里任务报错分为三种
+1. 业务报错  
+  比如业务中没有权限访问的用户请求访问那么就会业务报错。
+  业务报错专门制定了一个`BusinessException`来捕捉业务错误。
+
+ ```ts
+export class BusinessException extends Error {
+  public code: string;
+
+  constructor(someException) {
+    super();
+    // anything。。。
+  }
+}
+ ```
+
+ 继承于Error类，业务上错误`throw` 这个错误类型 error filter就可以捕捉到了。好处在与可以统一处理业务报错返回格式或者添加其他逻辑易于管理。
+
+2. 程序内部报错
+   捕捉程序内部报错的问题，给前端友好的提示。
+
+3. 前端请求报错
+   捕捉前端参数错误或请求错误方式、权限等前端相关的前端报错，告诉前端错误原因。
 
 ```ts
 import {
@@ -215,18 +401,107 @@ export class ErrorFilter<T> implements ExceptionFilter {
 内部错误一般用来记录错误信息的动作  
 最后捕捉剩下的前端请求错误，做统一处理格式化处理
 
-### cors 跨域
+### [cors 跨域](https://docs.nestjs.cn/6/techniques?id=cors)
 
-### 数据库
+很简单，在 `mian.ts` 中加上一句`app.enableCors();`就可以了。
 
 ### 请求
+业务中有些数据是请求其他服务的，所以有了请求模块
+
+
+```ts
+import { Injectable, HttpService, forwardRef, Inject } from '@nestjs/common';
+
+@Injectable()
+export class RequestService {
+  private baseUrl: string;
+  private cookie: string;
+  private headers: any;
+
+  constructor(
+    private readonly httpService: HttpService,
+  ) {
+    this.cookie = '';
+    this.baseUrl = '';
+    this.headers = {
+      'Content-type': 'application/json',
+    };
+  }
+
+  // 通用request
+  public async request(method, url: string, data?: any, headers?: object) {
+    let res;
+    
+    url = url.replace(this.baseUrl, '');
+
+    const requestConfig = {
+      url: this.baseUrl + url,
+      method,
+      headers: {
+        Cookie: this.cookie,
+        ...this.headers,
+        ...headers,
+      },
+      data,
+    };
+    res = await this.httpService
+      .request(requestConfig)
+      .toPromise()
+      .catch(async err => {
+        // 捕捉请求错误
+        // anything...
+      });
+    return res.data
+  }
+
+  // 通用Post
+  public async post(url: string, data?: any, headers?: object) {
+    return await this.request('Post', url, data, headers);
+  }
+  // 通用Get
+  public async get(url: string, data?: any, headers?: object) {
+    return await this.request('Get', url, data, headers);
+  }
+
+  // 获得cookie
+  public getCookie(): string {
+    return this.cookie;
+  }
+  // 设置cookie
+  public setCookie(cookie): void {
+    this.cookie = cookie;
+  }
+}
+
+```
 
 ### 配置文件
 
+在src的同级目录下写了`nest.config.ts` 的文件来写入配置。官方也有把配置文件写成一个module的，这里是图方便就写了单个文件。官方的写法略麻烦但好处却不是很能够理解，还要多参悟参悟把。
+
 ### 环境判断
+
+使用了[cross-env](https://github.com/kentcdodds/cross-env#readme) 这个插件，也就前端经常会用来判断环境但插件。
 
 ## 提炼
 
 ### 模型转换
+模型转换一般是  DO->DTO->VO  
+这三个东西分别是什么呢？  
+DO就是实体类，数据库一张表有那些属性，这个DO类就有哪些属性，是用来和数据库交互但类。   
+DTO是在类型的传输过程中，DO并不总是满足业务需求，有时需要一些额外的属性，这时候就需要一个可以传输的类在程序中传递，这就是DTO。DTO一般都是基于业务场景，将解耦后DO重新何在一起进行传输。
+VO是前端对象类，这个类的作用就是把前端需要的数据写成一个类，这样做到目的一是为了符合前端需求，二是为了不暴露数据库不应该暴露的数据，比如用户信息的DO中一般都存在用户名和密码，在传输中DTO也可能会有这写属性，但是这些属性是不是适合传递给前端的，所以就需要VO来规定传输格式了。
+
 
 ### 功能解耦
+
+解耦其实是非常重要一环，解耦的好决定了代码的灵活，服用性高，那么怎解耦呢。
+比如这次遇到的api文档中需要生成swagger json文件然后同步到Yapi上面去。一开是我是写在一起的，但是后来仔细思考，生成swagger json 文件和同步Yapi其实是两个动作。如果以后需要其他api工具生成json文件，再同步，那原来的方法就不能使用了，还需要重新写一个方法。这显然是不利于开发的，所以正确的做法应该是把这两个方法拆开解耦，一个方法只做一件事。当其中一个方法需要更换当时候，就不会影响到其他方法了。  
+解耦的时候如果不知道从哪里解开，那可以先描述一下你要的事情而不是着急从代码着手怎么分割。    
+
+比如：我要去麦当劳吃汉堡然后回家。  
+解耦后就变成这两个方法：
+- 去一个地方
+- 吃东西
+  
+这样即使需求换成：我要去北京吃烤鸭然后去上海；也能使用刚刚那两个方法通过传递不同的参数就好了。
