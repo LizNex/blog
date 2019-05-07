@@ -26,7 +26,16 @@ https://cn.eslint.org/docs/user-guide/getting-started
 
 - 安装 vscode中的eslint 插件
 - 在vscode设置中打开`Eslint:Always Show Status` 就可以看到有问题的语法被标记了
-- prettier插件配和eslint格式化代码，安装prettier插件，完成后在vscode设置中打开 `Prettier: Eslint Integration`，现在prettier格式化代码的时候就采用eslint的规则了
+- vscode配合eslint插件自动修复文件：在eslint插件中打开`Eslint:Auto Fix On Save`,保存的时候就可以按照eslint规则自动修复代码了。 如果需要支持更多文件类型（比如vue）在vscode的设置文件`setting.json`中加入
+  ```json
+  "eslint.validate": [
+    {
+      "language": "vue",
+      "autoFix": true
+    }
+  ],
+  ```
+  **注意：可以能会和格式话工具冲突，如果不能自动修复建议先禁用格式化工具或禁用保存时格式化选项**
 
 ## 配合 git 做提交检查
   -  安装 husky   
