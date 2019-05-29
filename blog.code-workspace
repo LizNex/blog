@@ -1,7 +1,10 @@
 {
   "folders": [
-	{
-		"path": "."
-	}
-]
+		{
+			"path": "/Users/zhili/Desktop/IRS"
+		},
+		{
+			"path": "/Users/zhili/Desktop/nuxt-template"
+		}
+	]
 }
