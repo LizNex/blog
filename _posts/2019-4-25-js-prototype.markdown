@@ -11,7 +11,7 @@ tags:
 
 ## 原型链
 
-![prototype](/blog/img/in-post/prototype/status-init.png)
+![prototype](/blog/img/in-post/prototype/status-init.png){:height="70%" width="70%"}
 
 <center style="color:#999"> 原型链基础 </center>
 
@@ -34,7 +34,7 @@ tags:
 function Animal() {}
 ```
 
-![声明方法时的原型链状态](/blog/img/in-post/prototype/status-function.png)
+![声明方法时的原型链状态](/blog/img/in-post/prototype/status-function.png){:height="70%" width="70%"}
 
 <center style="color:#999"> 声明一个Animal函数 </center>
 
@@ -91,3 +91,29 @@ js 的所有对象都是基于 `Object`对象，所以`Animal.prototype.__protot
 
 原型链另一个非常有用的功能：继承  
 我们来看下继承是原型链的变化吧
+
+老样子我们有个`Animal`类, 然后有个`Dog`类继承 `Animal`,继承的步骤如下
+
+```js
+// 声明一个Animal类
+function Animal(){}
+// 获得Animal实例
+const animal = new Animal()
+// 声明一个Dog类
+function Dog(){}
+// Dog的prototype 指向animal实例
+Dog.prototype = animal
+// animal实例构造函数指向Dog
+animal.constructor = Dog
+
+// 得到一个继承于Animal的Dog 实例
+const dog = new Dog()
+```
+
+完成以后的原型链是这样的
+![继承](/blog/img/in-post/prototype/status-extend.png){:height="70%" width="70%"}
+
+<center style="color:#999"> 继承 </center>
+
+`Dog.prototype = animal`这都应该能够理解是为了替换原型  
+`animal.constructor = Dog` 实例的构造函数指向`Dog` 为了正确关联`animal`和`Dog`的关系。
