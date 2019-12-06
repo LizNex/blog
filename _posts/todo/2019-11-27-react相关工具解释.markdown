@@ -1,0 +1,30 @@
+---
+layout: post
+title: "react 相关工具解释"
+subtitle: ""
+date: 2019-11-26 12:00:00
+author: "左手喝水"
+header-img: "img/post-bg-2015.jpg"
+tags:
+  - css
+---
+
+## UI
+Ant-design：阿里出品的UI库
+Ant-design-pro：阿里出品桌面端UI库
+
+## 
+React: react的核心库，可以搭配不同平台的操作库如：react-dom react-native  实现跨平台使用
+React-redux:react链接redux的工具
+Redux-thunk:
+Redux-sage:异步请求，sideEffect
+Redux：数据
+React-router:react路由
+React-native:react 操作原生相关的包
+React-dom：react操作dom相关的包
+
+## 框架
+Creat-reach-app：react最基础的脚手架
+DVA：包含Redux相关的框架
+UMI：阿里的react框架
+Next：后端渲染框架
