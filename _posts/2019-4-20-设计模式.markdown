@@ -1,0 +1,527 @@
+---
+layout: post
+title: "javascript设计模式与实践 第一章 面向对象的javascript"
+subtitle: ""
+date: 2019-04-15 12:00:00
+author: "左手喝水"
+header-img: "img/post-bg-2015.jpg"
+tags:
+  - 设计模式
+---
+
+> “站在巨人的肩上写代码”
+
+## 前言
+
+- 本文中设计模式的学习是通过《javascript 设计模式与实践》一书，所以也算是这本书的读书笔记，笔记格式采用康奈尔笔记格式；
+- 相关设计模式实践仓库：<https://github.com/LizNex/design-Mode>
+
+## 第一章 面向对象的 javascript
+
+### 1.1 动态类型语言和鸭子类型
+
+静态类型：
+
+- 优点：编译器事先知道变量的类型是什么，可以提交校验代码。其次事先知道类型编译器还可以做代码优化。
+- 缺点：增加更多的代码量，开发人员会把一部分精力放在声明类型上。不像动态类型完全关注业务逻辑就好。
+
+动态类型：
+
+- 优点：代码量少，代码越少越容易阅读，开发人员可以把更多的精力放在逻辑表达上。
+- 缺点：无法保证变量类型，运行过程中可能会出相关的错误，这好像在商店买了一包牛肉辣条，但是要真正吃到嘴里才知道是不是牛肉味。
+
+javascript 建立在鸭子模型的基础之上，鸭子模型就是
+
+> 鸭子类型的通俗说法是:“如果它走起 路来像鸭子，叫起来也是鸭子，那么它就是鸭子。”
+
+也就是不关心对象的类型，还是关注对象的行为。
+
+```js
+// 1.1 动态类型语言和鸭子类型
+var duck = {
+  duckSinging: function() {
+    console.log("嘎嘎嘎");
+  }
+};
+var chicken = {
+  duckSinging: function() {
+    console.log("嘎嘎嘎");
+  }
+};
+var choir = []; // 合唱团
+joinChoir = function(animal) {
+  if (animal && typeof animal.duckSinging === "function") {
+    choir.push(animal);
+    console.log("恭喜加入合唱团");
+    console.log("合唱团已有成员数量:" + choir.length);
+  }
+};
+joinChoir(duck); // 恭喜加入合唱团 joinChoir( chicken ); // 恭喜加入合唱团
+```
+
+### 1.2 多态
+
+多态背后的思想是将“做什么”和“谁去做以及怎样去做”分离开来  
+也就是将“不变的事物”与 “可能改变的事物”分离开来。
+
+```js
+// 1.2 多态
+var makeSound = function(animal) {
+  animal.sound();
+};
+var Duck = function() {};
+Duck.prototype.sound = function() {
+  console.log("嘎嘎嘎");
+};
+var Chicken = function() {};
+Chicken.prototype.sound = function() {
+  console.log("咯咯咯");
+};
+makeSound(new Duck()); // 嘎嘎嘎
+makeSound(new Chicken()); // 咯咯咯
+
+Dog.prototype.sound = function() {
+  console.log("汪汪汪");
+};
+makeSound(new Dog()); // 汪汪汪
+```
+
+在书中的鸭子叫例子中就是把每个动物都会叫，把“叫”这个行为（做什么）抽象了出来，每个小动物只要实现叫的方法就可以了。每次调用不变的“叫”方法，传入不同的小动物（谁去做），输出的内容根据动物的种类不同而不同，从而实现了多态。
+
+实现多态的方式有很多：抽象，继承  
+上面这个例子就是使用抽象来实现多态
+
+js 与静态类型多态实现不同，js 在运行过程中可以转换类型，而在调用方法的时候也不同做类型检查，所以不用关心类型是什么，只需要对象实现相应的方法就可以了，也就是面向接口编程。
+
+> 多态的最根本好处在于，你不必再向对象询问“你是什么类型”而后根据得到的答案调用对象的某个行为——你只管调用该行为就是了，其他的一切多态机制都会为你安排妥当。
+
+换句话说，多态最根本的作用就是通过把过程化的条件分支语句转化为对象的多态性，从而消除这些条件分支语句。
+
+### 1.3 封装
+
+封装：封装的目的是将信息隐藏，隐藏数据、数据类型、内部实现、内部设计等等。只要对外的接口或者调用方式没有变化，用户就不用关心它内部实现的改变。
+
+```js
+// 封装
+// js中使用方法来实现作用域
+var myObject = (function() {
+  var __name = "sven"; // 私有(private)变量
+  return {
+    getName: function() {} // 共有(public)变量
+  };
+})();
+console.log(myObject.getName()); // 输出:sven
+console.log(myObject.__name); // 输出:undefined
+```
+
+在 js 中声明私有变量大多是采用闭包的形式来完成，目前也提案将 `#` 作为新的私有属性标记（社区中已经很有很多反对声音）
+
+### 1.4 原型模式和基于原型继承的 JavaScript 对象系统
+
+js 是使用原型模式来完成继承
+
+原型模式
+
+![prototype](/blog/img/in-post/设计模式/prototype.png)
+
+- 所有的数据都是对象。
+- 要得到一个对象，不是通过实例化类，而是找到一个对象作为原型并克隆它。
+- 对象会记住它的原型。
+- 如果对象无法响应某个请求，它会把这个请求委托给它自己的原型。
+
+```js
+// 使用原型克隆对象
+var Plane = function() {
+  this.blood = 100;
+  this.attackLevel = 1;
+  this.defenseLevel = 1;
+};
+var plane = new Plane();
+plane.blood = 500;
+plane.attackLevel = 10;
+plane.defenseLevel = 7;
+var clonePlane = Object.create(plane);
+console.log(clonePlane); // 输出:Object {blood: 500, attackLevel: 10, defenseLevel: 7}
+
+// 在不支持 Object.create 方法的浏览器中，则可以使用以下代码:
+Object.create =
+  Object.create ||
+  function(obj) {
+    var F = function() {};
+    F.prototype = obj;
+    return new F();
+  };
+```
+
+js 中 new 一个对象的过程
+例如要 new 一个 person 对象
+
+1. 创建一个 object 对象
+2. 新 object 对象的 \_\_proto\_\_ 指向 person 的原型
+3. 对 object 对象使用构造函数（将构造函数的 this 指向 object 执行构造函数）
+4. 判断构造函数后返回的值是不是 object 类型的，如果是返回构造函数返回的内容，如果不是返回 object 对象
+
+代码实现
+
+```js
+  function new (constructor,...arg){
+    let object = new Object();
+    object.__proto__ =  constructor.prototype
+    let result = constructor.call(object,arg)
+    return  instanceOf "Object" ? result: object
+  }
+```
+
+new 过程中原型链变化
+
+![new 对象初始化](/blog/img/in-post/设计模式/new-step-0.png)
+
+<center style="color:#999">new对象 初始化状态</center>
+
+![new 对象第一步](/blog/img/in-post/设计模式/new-step-1.png)
+
+<center style="color:#999">new对象 第1步</center>
+
+![new 对象第二步](/blog/img/in-post/设计模式/new-step-2.png)
+
+<center style="color:#999">new对象 第2步</center>
+
+`object` 刚被 `new` 出来的时候本身是没有 `constructor` 属性的，但在浏览器运行 `object.constructor` 时得到 `Object`构造函数。  
+这是因为当 `objec` 本身找不到属性的时候就会去找它的原型，`object.prototype.constructor` 指向 `Object`,所以 `object.constructor` 指向 `Object`。  
+也就是说改变了`object.__proto__`的话，也同时改变了它构造函数的指向
+
+### 5 策略模式
+
+![策略模式](/blog/img/in-post/设计模式/策略模式.jpg)
+
+总的来说就是通过中间`context`来选择哪种策略这样做的好处是
+
+1. 策略和调用方解耦，策略改变不影响调用方只需要修改策略
+2. 避免大量`if else`语句
+3. 策略可以复用在其他地方
+
+### 6 代理模式
+
+简单来讲就是中间件，可以在直接访问对象之前做一些处理， 代理对象代理的接口要和和真实对象一致（参数，调用方式）
+
+常见功能如下
+
+1. 控制访问包括权限、时机、条件等等
+2. 节省开销
+   1. 在需要的时候调用资源
+   2. 合并运算减少计算量
+   3. 缓存代理，记录访问结果，相同的访问直接返回结果
+
+还有很多功能比如说转换参数、加工返回等等功能很多
+
+### 8 发布订阅模式
+
+订阅方订阅消息，订阅消息的用户会有一个订阅列表，当发布方需要发布消息就根据列表通知对方
+
+优点：
+
+1. 时间上解耦
+2. 对象上解耦
+
+缺点：
+
+1. 过度使用会难以追踪数据流动
+
+可以有这几种形态
+
+1. 普通发布订阅模式（也被认为是观察者模式）
+2. 中间人发布订阅模式（发布订阅实现都放在中间人中，发布和订阅方都调用中间人的接口即可，也被认为是传统的发布订阅模式）
+
+```js
+// 普通发布订阅模式
+
+var release = {
+  list: [],
+  trigger: function() {
+    // console.log(this);
+    for (let fn of this.list) {
+      fn();
+    }
+  },
+  listen: function(fn) {
+    console.log("订阅了消息");
+    this.list.push(fn);
+  }
+};
+
+release.listen(() => {
+  console.log("发布了消息");
+});
+
+setTimeout(() => {
+  release.trigger();
+}, 2000);
+```
+
+什么时候使用：
+常用与异步通知或主动方发起动作通知被动方
+
+参考： 发布订阅模式和观察者模式 <https://juejin.im/post/5bb1bb616fb9a05d2b6dccfa>
+
+### 9 命令模式
+
+![命令模式](/blog/img/in-post/设计模式/命令模式.jpg)
+
+优点：
+
+1. 解开发送方和接受方的耦合，发送方不必知道接受方是是谁会怎么实现，接受方也不用知道发送方是谁。接受方发生变动时不影响发送方，反之同理。
+2. 由于接受方的行为都由命令对象来执行，而命令对象的生命周期是一直存在的除非手动清理，这样发送方的命令就可以储存在命令对象之中可以完成延后、撤销、重做或者其他一些命令
+
+缺点：
+
+过度使用会有很多命令对象
+
+### 10 组合模式
+
+将多条命令组合成一条宏命令，调用宏命令的`excute`就可以执行所有组成的命令的`excute`，这样的组合方式就是组合模式；
+
+```html
+<!-- 示例 -->
+<html>
+  <body>
+    <button id="button">按我</button>
+  </body>
+  <script>
+    var MacroCommand = function() {
+      return {
+        commandsList: [],
+        add: function(command) {
+          this.commandsList.push(command);
+        },
+        execute: function() {
+          for (var i = 0, command; (command = this.commandsList[i++]); ) {
+            command.execute();
+          }
+        }
+      };
+    };
+    var openAcCommand = {
+      execute: function() {
+        console.log("打开空调");
+      }
+    };
+    /**
+     * 家里的电视和音响是连接在一起的，所以可以用一个宏命令来组合打开电视和打开音响的命令
+     * **/
+    var openTvCommand = {
+      execute: function() {
+        console.log("打开电视");
+      }
+    };
+    var openSoundCommand = {
+      execute: function() {
+        console.log("打开音响");
+        9;
+      }
+    };
+    var macroCommand1 = MacroCommand();
+    macroCommand1.add(openTvCommand);
+    macroCommand1.add(openSoundCommand);
+    /*********关门、打开电脑和打登录 QQ 的命令****************/
+    var closeDoorCommand = {
+      execute: function() {
+        console.log("关门");
+      }
+    };
+    var openPcCommand = {
+      execute: function() {
+        console.log("开电脑");
+      }
+    };
+    var openQQCommand = {
+      execute: function() {
+        console.log("登录 QQ");
+      }
+    };
+    var macroCommand2 = MacroCommand();
+    macroCommand2.add(closeDoorCommand);
+    macroCommand2.add(openPcCommand);
+    macroCommand2.add(openQQCommand);
+    /*********现在把所有的命令组合成一个“超级命令”**********/
+    var macroCommand = MacroCommand();
+    macroCommand.add(openAcCommand);
+    macroCommand.add(macroCommand1);
+    macroCommand.add(macroCommand2);
+    /*********最后给遥控器绑定“超级命令”**********/
+    var setCommand = (function(command) {
+      document.getElementById("button").onclick = function() {
+        command.execute();
+      };
+    })(macroCommand);
+  </script>
+</html>
+```
+
+特点：
+
+1. 树装结构
+2. 子节点可以继续添加节点
+3. 叶节点不能添加
+4. 节点之间具有相同的接口
+
+何时使用：
+
+1. 表示对象的部分  
+   整体层次结构。组合模式可以方便地构造一棵树来表示对象的部分  整 体结构。特别是我们在开发期间不确定这棵树到底存在多少层次的时候。在树的构造最 终完成之后，只需要通过请求树的最顶层对象，便能对整棵树做统一的操作。在组合模 式中增加和删除树的节点非常方便，并且符合开放  封闭原则。
+
+2. 客户希望统一对待树中的所有对象。
+   组合模式使客户可以忽略组合对象和叶对象的区别， 客户在面对这棵树的时候，不用关心当前正在处理的对象是组合对象还是叶对象，也就不用写一堆 if、else 语句来分别处理它们。组合对象和叶对象会各自做自己正确的事情， 这是组合模式最重要的能力。
+
+### 12 享元模式
+
+享元模式主要解决的是性能问题，比如说男女装各 50 种，如果要 100 个男女来试穿就很浪费，其实只要一男一女就可以轮换试穿就可以大大降低开销。享元模式也是基于这样的思想来提升性能
+
+适用性：
+
+1. 对象的大多数状态都可以变为外部状态。
+2. 一个程序中使用了大量的相似对象。
+3. 由于使用了大量对象，造成很大的内存开销。
+4. 剥离出对象的外部状态之后，可以用相对较少的共享对象取代大量对象。
+
+拓展实现还有对象池
+
+每次创建的对象使用完毕放入资源池中，下次使用时先从资源池中取出，如果池中没有再重新创建。这和享元模式的思想类似。
+
+### 13 职责链
+
+![职责链模式](/blog/img/in-post/设计模式/职责链模式.png)
+
+职责链模式将每一项职责拆分组成链式结构，每一种职责就是一个链式节点，节点包含下一个节点的引用（尾节点不包含，做最后的处理）。这样调用方不必知道具体是哪个职责模块来处理，只要将参数传入调用链即可。这样做的好处是调用方与职责方解耦。
+优点：
+
+1. 解耦调用方和职责方
+2. 可以从任意节点开始调用
+3. 代码逻辑清晰
+
+缺点：
+
+1. 链条过长会影响性能
+
+```js
+// demo
+class Chain {
+  constructor(fn) {
+    this.fn = fn;
+    this.next = null;
+    this.nextFlag = "nextSuccessor";
+  }
+  after(next) {
+    this.next = next;
+    return next;
+  }
+  excute() {
+    const ret = this.fn.apply(this, arguments);
+    if (ret === this.nextFlag) {
+      return this.next && this.next.excute.apply(this.next, arguments);
+    }
+    return ret;
+  }
+}
+
+var order500 = function(orderType, pay, stock) {
+  if (orderType === 1 && pay === true) {
+    console.log("500 元定金预购，得到 100 优惠券");
+  } else {
+    return "nextSuccessor"; // 我不知道下一个节点是谁，反正把请求往后面传递
+  }
+};
+var order200 = function(orderType, pay, stock) {
+  if (orderType === 2 && pay === true) {
+    console.log("200 元定金预购，得到 50 优惠券");
+  } else {
+    return "nextSuccessor"; // 我不知道下一个节点是谁，反正把请求往后面传递
+  }
+};
+
+var orderNormal = function(orderType, pay, stock) {
+  if (stock > 0) {
+    console.log("普通购买，无优惠券");
+  } else {
+    console.log("手机库存不足");
+  }
+};
+
+const chain500 = new Chain(order500);
+const chain200 = new Chain(order200);
+const chainNoraml = new Chain(orderNormal);
+chain500.after(chain200).after(chainNoraml);
+
+chain500.excute(1, true, 500); // 输出:500 元定金预购，得到 100 优惠券
+chain500.excute(2, true, 500); // 输出:200 元定金预购，得到 50 优惠券
+chain500.excute(1, false, 500); // 输出:普通购买，无优惠券
+```
+
+### 14 中介者模式
+
+![中介者模式](/blog/img/in-post/设计模式/职责链模式.png)
+
+中介者模式将多个对象之间的复杂关系放入中介者对象之中，对象仅仅持有自身属性，让对象之间的关系容易理解。
+
+缺点：
+中介者对象可能会变的很庞大，难以理解
+
+### 16 状态模式
+
+和策略模式有些类似，也是讲请求委托给其他的类来完成功能。  
+状态模式中有状态类和委托请求的 `context`
+
+- 状态类: 收集不同状态下相同操作后不同的行为（也就是说状态类的每个成员都应该实现相同请求的接口，如 click、del 等）。  
+  状态之间可以是有关联的的，比如 a 状态结束切换到 b 状态，用户不必对状态非常了解，状态之间的关系已包含在状态类中（这里也是和策略模式区分的地方，策略模式需要用户知道策略的内容，然后根据不同情况去调用）
+- `context`: 记录当前状态并将请求委托给当前状态
+
+优点：
+
+- 状态模式定义了状态与行为之间的关系，并将它们封装在一个类里。通过增加新的状态 类，很容易增加新的状态和转换
+- 避免 Context 无限膨胀，状态切换的逻辑被分布在状态类中，也去掉了 Context 中原本过 5 多的条件分支。
+- 用对象代替字符串来记录当前状态，使得状态的切换更加一目了然。
+- Context 中的请求动作和状态类中封装的行为可以非常容易地独立变化而互不影响。
+
+缺点：
+
+- 状态模式的缺点是会在系统中定义许多状态类，编写 20 个状态类是一项枯燥乏味的工作， 而且系统中会因此而增加不少对象。
+- 由于逻辑分散在状态类中，虽然避开了不受欢迎的条 件分支语句，但也造成了逻辑分散的问题，我们无法在一个地方就看出整个状态机的逻辑
+
+```html
+<!-- 灯泡demo -->
+<html>
+  <h1>灯泡状态</h1>
+  <button id="toggle">开关</button>
+  <script>
+    // 灯泡开关示例
+    class Light {
+      constructor(state) {
+        this.currState = state.off;
+        this.toggle = null;
+      }
+      init(toggleId) {
+        this.toggle = document.querySelector(toggleId);
+        this.currState = this.state.off;
+        this.toggle.onclick = () => {
+          this.currState.press.apply(this);
+        };
+      }
+    }
+    const state = {
+      off: {
+        press() {
+          console.log("开关打开");
+          this.currState = state.on;
+        }
+      },
+      on: {
+        press() {
+          console.log("开关关闭");
+          this.currState = state.off;
+        }
+      }
+    };
+    const light = new Light(state);
+    light.init("#toggle");
+  </script>
+</html>
+```
